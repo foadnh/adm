@@ -21,6 +21,10 @@ app.config(function ($routeProvider) {
 			templateUrl: '/static/views/user-root.html',
 			controller: 'UserRootCtrl'
 		})
+		.when('/user/:user/:taskId', {
+			templateUrl: '/static/views/user-sub.html',
+			controller: 'UserSubCtrl'
+		})
 		.otherwise({
 			redirectTo: '/'
 		});

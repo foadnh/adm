@@ -1,4 +1,4 @@
-<h2>Tasks</h2>
+<h2>Tasks for {{ user }}</h2>
 <nav class="navbar navbar-default" role="navigation">
 	<div class="col-md-offset-1 col-md-10">
 		<div class="navbar-header">
@@ -21,13 +21,13 @@
 
 <div ng-repeat="task in tasks">
 	<span ng-click="toggleDone(task)">{{ task.done | percent }}</span>
-	<a href="#/task/{{ task.id }}">{{ task.title }}</a>
+	<a href="#/user/{{ user }}/{{ task.id }}">{{ task.title }}</a>
 	<span ng-click="subShow=$index" ng-show="task.sub" class="caret"></span>
 
 	<div ng-show="subShow==$index">
 		<div class="subTasks" ng-repeat="(subtaskId, subtask) in task.sub">
 			<span ng-click="toggleSubDone(taskId, subtaskId)">{{ subtask.done | percent }}</span>
-			<a href="#/tasks/{{ subtask.$id }}">{{ subtask.title }}</a>
+			<a href="#/user/{{ user }}/{{ subtask.$id }}">{{ subtask.title }}</a>
 		</div>
 	</div>
 

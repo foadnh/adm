@@ -2,31 +2,29 @@
  * Created by foad on 5/1/14.
  */
 
-app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
+app.controller('UserSubCtrl', function($scope, $routeParams, tastypieService) {
+	$scope.user = $routeParams.user;
 	$scope.show = {
 		detail: true,
 		submit: false,
 		addAssign: false
 	};
 
-	$scope.assign = {
-		done: 0,
-		user: ''
-	};
-
 	var taskServ = new tastypieService({
 		apiUrl : '/api/v1/task/'
 	});
 	var update = function() {
-		taskServ.get($routeParams.taskId).then(function(result) {
-			$scope.task = result.data;
-			if (result.data.subs != null) {
-				subsId = result.data.subs.split(',');
+		taskServ.get($routeParams.taskId).then(function(ref) {
+			$scope.task = ref.data;
+			if (ref.data.subs != null) {
+				subsId = ref.data.subs.split(',');
 				console.log(subsId);
 				$scope.subtasks = [];
 				for(var i= 0; i<subsId.length; i++) {
-					taskServ.get(subsId[i]).then(function(result) {
-						$scope.subtasks.push(result.data);
+					taskServ.get(subsId[i]).then(function(ref) {
+						if(ref.data.users.indexOf($scope.user) != -1) {
+							$scope.subtasks.push(ref.data);
+						}
 					});
 				}
 			}
@@ -40,7 +38,9 @@ app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
 	update();
 
 	$scope.subtaskSubmit = function() {
+		console.log($scope.subtask);
 		$scope.subtask.parent = Number($routeParams.taskId);
+		$scope.subtask.users = $scope.user + ':0';
 		taskServ.save($scope.subtask).then(function(ref) {
 			if ($scope.task.subs == null) {
 				$scope.task.subs = ref.data.id;
