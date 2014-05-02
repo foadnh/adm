@@ -7,6 +7,10 @@ var app = angular.module('TodoApp', [
 	'tyaslab.tastypie'
 ]);
 
+app.run(function($rootScope) {
+	$rootScope.$broadcast('event:initial-auth');
+});
+
 app.config(function ($routeProvider) {
 	$routeProvider
 		.when('/', {

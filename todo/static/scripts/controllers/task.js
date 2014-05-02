@@ -9,11 +9,6 @@ app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
 		addAssign: false
 	};
 
-	$scope.assign = {
-		done: 0,
-		user: ''
-	};
-
 	var taskServ = new tastypieService({
 		apiUrl : '/api/v1/task/'
 	});
@@ -22,18 +17,19 @@ app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
 			$scope.task = result.data;
 			if (result.data.subs != null) {
 				subsId = result.data.subs.split(',');
-				console.log(subsId);
 				$scope.subtasks = [];
 				for(var i= 0; i<subsId.length; i++) {
-					taskServ.get(subsId[i]).then(function(result) {
-						$scope.subtasks.push(result.data);
+					taskServ.get(subsId[i]).then(function(ref) {
+						$scope.subtasks.push(ref.data);
 					});
 				}
 			}
 			$scope.assigns = [];
-			var assigns = $scope.task.users.split(',');
-			for (var i = 0; i < assigns.length; i++) {
-				$scope.assigns.push({user: assigns[i].split(':')[0], done: assigns[i].split(':')[1]});
+			if ($scope.task.users != '') {
+				var assigns = $scope.task.users.split(',');
+				for (var i = 0; i < assigns.length; i++) {
+					$scope.assigns.push({user: assigns[i].split(':')[0], done: assigns[i].split(':')[1]});
+				}
 			}
 		});
 	};
@@ -49,6 +45,11 @@ app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
 				$scope.task.subs += ',' + ref.data.id;
 			}
 			taskServ.save($scope.task);
+			$scope.show.submit = false;
+			$scope.subtask = {
+				title: '',
+				detail: ''
+			};
 			update();
 		});
 	};
@@ -71,12 +72,17 @@ app.controller('TaskCtrl', function($scope, $routeParams, tastypieService) {
 	};
 
 	$scope.assignSubmit = function() {
-		$scope.assigns.push({user: $scope.assign.user, done: $scope.assign.done});
+		$scope.assigns.push({user: $scope.assign.user, done: 0});
 		$scope.assignsUpdate();
+		$scope.show.addAssign = false;
+		$scope.assign.user = '';
 	};
 
 	$scope.log = function() {
-		console.log($scope.task);
-		console.log($scope.assigns);
+		console.log('subtasks: ' + $scope.subtasks)
+		console.log('task: ' + $scope.task);
+		console.log('assigns: ' + $scope.assigns);
+		console.log('parent: ' + $scope.task.parent);
+
 	};
 });

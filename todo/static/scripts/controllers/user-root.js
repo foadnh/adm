@@ -33,6 +33,11 @@ app.controller('UserRootCtrl', function($scope, $routeParams, tastypieService) {
 		taskServ.save($scope.task).then(function(ref) {
 			console.log(ref.data.id);
 			rootServ.save({taskId: Number(ref.data.id)}).then(function(refChild){
+				$scope.show.submit = false;
+				$scope.task = {
+					title: '',
+					detail: ''
+				};
 				update();
 			});
 		});

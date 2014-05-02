@@ -1,7 +1,8 @@
 from django.contrib import admin
-from todo.models import Task, Root, CustomUser
+from todo.models import Task, Root, CustomUser, Property
 
 # Register your models here.
 admin.site.register(Task)
 admin.site.register(Root)
-admin.site.register(CustomUser)
+admin.site.register(Property)
+# admin.site.register(CustomUser)

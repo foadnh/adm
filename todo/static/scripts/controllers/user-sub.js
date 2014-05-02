@@ -18,7 +18,6 @@ app.controller('UserSubCtrl', function($scope, $routeParams, tastypieService) {
 			$scope.task = ref.data;
 			if (ref.data.subs != null) {
 				subsId = ref.data.subs.split(',');
-				console.log(subsId);
 				$scope.subtasks = [];
 				for(var i= 0; i<subsId.length; i++) {
 					taskServ.get(subsId[i]).then(function(ref) {
@@ -26,6 +25,7 @@ app.controller('UserSubCtrl', function($scope, $routeParams, tastypieService) {
 							$scope.subtasks.push(ref.data);
 						}
 					});
+
 				}
 			}
 			$scope.assigns = [];
@@ -71,12 +71,15 @@ app.controller('UserSubCtrl', function($scope, $routeParams, tastypieService) {
 	};
 
 	$scope.assignSubmit = function() {
-		$scope.assigns.push({user: $scope.assign.user, done: $scope.assign.done});
+		$scope.assigns.push({user: $scope.assign.user, done: 0});
 		$scope.assignsUpdate();
+		$scope.show.addAssign = false;
+		$scope.assign.user = '';
 	};
 
 	$scope.log = function() {
 		console.log($scope.task);
+		console.log($scope.subtasks);
 		console.log($scope.assigns);
 	};
 });

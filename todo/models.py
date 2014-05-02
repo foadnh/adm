@@ -19,3 +19,7 @@ class CustomUser(User):
 
 	# Use UserManager to get the create_user method, etc.
 	objects = UserManager()
+
+class Property(models.Model):
+	name = models.CharField(max_length=50)
+	done = models.BooleanField(default=False)

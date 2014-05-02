@@ -17,5 +17,6 @@ urlpatterns = patterns('',
 	url(r'^admin/', include(admin.site.urls)),
 	(r'^api/', include(v1_api.urls)),
 
-	url(r'^$', 'todo.views.home', name = 'home')
+	url(r'^$', 'todo.views.home', name = 'home'),
+	url(r'^logout/$', 'todo.views.logout_user', name = 'logout'),
 )
