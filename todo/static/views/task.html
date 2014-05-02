@@ -1,0 +1,68 @@
+<h2>Task</h2>
+<nav class="navbar navbar-default" role="navigation">
+	<div class="col-md-offset-2 col-md-8">
+		<div class="navbar-header">
+			<span class="navbar-brand">New subtask</span>
+		</div>
+		<a ng-hide="show.submit" ng-click="show.submit=true" class="btn btn-info navbar-btn">+</a>
+		<form name="taskForm" ng-show="show.submit" ng-submit="subtaskSubmit()" class="row form-inline navbar-form">
+			<div class="input-group col-md-4">
+			<span class="input-group-addon">
+				<input type="checkbox" ng-model="subtask.done">
+			</span>
+				<input type="text" placeholder="Title" class="form-control" ng-model="subtask.title" required>
+			</div>
+			<div class="input-group col-md-6">
+				<input type="text" placeholder="Detail" class="form-control" ng-model="subtask.detail">
+			<span class="input-group-btn">
+				<button type="submit" class="btn btn-default" ng-disabled="taskForm.$invalid">Add</button>
+			</span>
+			</div>
+		</form>
+	</div>
+</nav>
+
+<div>
+	<h3>
+		<span ng-click="toggleDone(task)">{{ task.done | checkmark }}</span>
+		<a href="#/tasks/{{ task.id }}">{{ task.title }}</a>
+	</h3>
+	<h4>{{ task.detail }}</h4>
+	<div class="subTasks" ng-repeat="subtask in subtasks">
+		<span ng-click="toggleSubDone()">{{ subtask.done | checkmark }}</span>
+		<a href="#/task/{{ subtask.id }}">{{ subtask.title }}</a>
+	</div>
+</div>
+
+<div class="buttons">
+	<a ng-hide="show.addAssign" ng-click="show.addAssign=true" class="btn btn-info">
+		<span class="glyphicon glyphicon-plus"></span>
+	</a>
+</div>
+
+<form name="assignForm" ng-show="show.addAssign" ng-submit="assignSubmit()" class="row form-inline">
+	<div class="input-group col-md-3">
+		<span class="input-group-addon">
+			<input type="checkbox" ng-model="assign.doneCheckmark">
+		</span>
+		<input type="number" placeholder="0" class="form-control" min="0" max="100" ng-model="assign.done">
+		<span class="input-group-addon">
+			%
+		</span>
+	</div>
+	<div class="input-group col-md-4">
+		<input type="text" placeholder="User" class="form-control" ng-model="assign.user">
+		<span class="input-group-btn">
+			<button type="submit" class="btn btn-default" ng-disabled="assignForm.$invalid">Add</button>
+		</span>
+	</div>
+</form>
+
+<div ng-show="assigns[0] != ''">
+	<h3>Assigned users</h3>
+	<ul ng-repeat="assign in assigns">
+		<li><a href="#/user/{{ assign.user }}">{{ assign.user }}</a> {{ assign.done }}%</li>
+	</ul>
+</div>
+
+<br /><button ng-click="log()" class="btn btn-default">Debug</button>

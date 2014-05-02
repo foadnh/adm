@@ -1,0 +1,15 @@
+{% extends "todo/base.html" %}
+{% load i18n %}
+{% block content %}
+<div class="container content" ng-app="TodoApp">
+	<div ng-view class="container">Loading...</div>
+</div>
+{% endblock content %}
+{% block extra_javascript %}
+<script src="{{ STATIC_URL }}scripts/app.js"></script>
+<script src="{{ STATIC_URL }}scripts/controllers/tasks.js"></script>
+<script src="{{ STATIC_URL }}scripts/controllers/task.js"></script>
+<script src="{{ STATIC_URL }}scripts/services/tastypie.js"></script>
+<script src="{{ STATIC_URL }}scripts/services/tasks.js"></script>
+<script src="{{ STATIC_URL }}scripts/filters/checkmark.js"></script>
+{% endblock extra_javascript %}
