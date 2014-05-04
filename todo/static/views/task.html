@@ -1,5 +1,8 @@
-<h2>Task</h2>
+<div class="navbar-margin-top"></div>
 <nav class="navbar navbar-default" role="navigation">
+	<p class="navbar-text navbar-right">
+		<a href="#/task/{{ task.parent }}" ng-if="task.parent!=null" class="navbar-link">Parent</a>
+	</p>
 	<div class="col-md-offset-1 col-md-10">
 		<div class="navbar-header">
 			<span class="navbar-brand">New subtask</span>
@@ -21,9 +24,16 @@
 
 <div ng-show="show.detail">
 	<h3>
-		<span ng-click="toggleDone(task)">{{ task.done | percent }}</span>
 		<a href="#/tasks/{{ task.id }}">{{ task.title }}</a>
 	</h3>
+	<div class="row">
+		<div class="col-md-2 single-line">
+			<progressbar class="progress-striped active" value="task.done" type="success">
+				<span ng-hide="task.done < 16">{{ task.done }}%</span>
+			</progressbar>
+		</div>
+	</div>
+
 	<h4>{{ task.detail }}</h4>
 
 	<button ng-click="show.detail=false" class="btn btn-default btn-sm">
@@ -62,7 +72,32 @@
 	</div>
 </form>
 
-<a href="#/task/{{ task.parent }}" ng-if="task.parent!=null">Back to parent</a>
+<div>
+	<h3>Properties</h3>
+	<div class="buttons">
+		<a ng-hide="show.addProperty" ng-click="show.addProperty=true" class="btn btn-info">
+			<span class="glyphicon glyphicon-plus"></span>
+		</a>
+	</div>
+
+	<form name="propertyForm" ng-show="show.addProperty" ng-submit="propertySubmit()" class="row form-inline">
+		<div class="input-group col-md-3">
+			<input type="text" placeholder="Property" class="form-control" ng-model="property.name" required>
+			<span class="input-group-btn">
+				<button type="submit" class="btn btn-default" ng-disabled="propertyForm.$invalid">Add</button>
+			</span>
+		</div>
+	</form>
+
+	<ul ng-repeat="property in properties">
+		<li>
+			<a class="btn btn-xs" ng-click="propertyToggleDone($index)">{{ property.done | checkmark }}</a> {{ property.name }}
+			<button ng-click="propertyDelete($index)" class="btn btn-danger btn-xs">
+				<span class="glyphicon glyphicon-remove"></span>
+			</button>
+		</li>
+	</ul>
+</div>
 
 <div ng-hide="subtasks==undefined">
 	<h3>Subtasks</h3>
@@ -83,22 +118,38 @@
 		</a>
 	</div>
 
+	<script type="text/ng-template" id="assignTemplate.html">
+		<a>
+			<span bind-html-unsafe="match.label | typeaheadHighlight:query"></span>
+			:
+			<span>{{ match.model.first_name }} {{ match.model.last_name }}</span>
+		</a>
+	</script>
 	<form name="assignForm" ng-show="show.addAssign" ng-submit="assignSubmit()" class="row form-inline">
 		<div class="input-group col-md-3">
-			<input type="text" placeholder="User" class="form-control" ng-model="assign.user" required>
+			<input type="text" placeholder="User" class="form-control" ng-model="assign.user" required
+					typeahead="user as user.username for user in users | filter:{username:$viewValue}"
+					typeahead-template-url="assignTemplate.html">
 			<span class="input-group-btn">
 				<button type="submit" class="btn btn-default" ng-disabled="assignForm.$invalid">Add</button>
 			</span>
 		</div>
 	</form>
 
+	<alert ng-show="show.assignAlert" type="danger" close="show.assignAlert=false">
+		Please ONLY select user from list.
+	</alert>
+
 	<ul ng-repeat="assign in assigns" ng-init="show.assignDone=-1">
 		<li>
-			<a href="#/user/{{ assign.user }}">{{ assign.user }}</a> {{ assign.done | percent }}
+			<a href="#/user/{{ assign.userId }}">{{ users | user:assign.userId }}</a> {{ assign.done | percent }}
 			<a ng-hide="showAssignDone" class="btn btn-black" ng-click="showAssignDone=true" ng-init="showAssignDone=false">
 				<span class="glyphicon glyphicon-tasks"></span>
 			</a>
-			<form name="assignDone" ng-show="showAssignDone" class="form-inline assign-form" ng-submit="assignsUpdate()">
+			<button ng-click="assignDelete($index)" class="btn btn-danger btn-xs">
+				<span class="glyphicon glyphicon-remove"></span>
+			</button>
+			<form name="assignDone" ng-show="showAssignDone" class="form-inline assign-form" ng-submit="assignDoneUpdate($index)">
 				<div class="input-group col-md-2">
 					<div class="input-group-btn">
 						<button type="submit" class="btn btn-success" ng-click="showAssignDone=false">
@@ -115,4 +166,27 @@
 	</ul>
 </div>
 
-<br /><button ng-click="log()" class="btn btn-default" style="display: block">Debug</button>
+<div>
+{#	<script type="text/ng-template" id="logTemplate.html">#}
+	<div class="modal-header">
+		<h3 class="modal-title">Logs</h3>
+	</div>
+	<div class="modal-body">
+		<ul>
+			<li ng-repeat="item in items">
+				<span>
+					<a href="#/user/{{ item.userId }}">{{ users | user:item.userId }}</a>
+					@<small>{{ item.date }}</small>
+				</span>
+				<p class="log-text">{{ item.text }}</p>
+			</li>
+		</ul>
+	</div>
+	<div class="modal-footer">
+		<button class="btn btn-warning" ng-click="close()">Close</button>
+	</div>
+{#	</script>#}
+	<button class="btn btn-default" ng-click="logOpen()">Log</button>
+</div>
+
+<br /><button ng-click="debug()" class="btn btn-default" style="display: block">Debug</button>

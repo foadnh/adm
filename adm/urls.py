@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from tastypie.api import Api
-from todo.api import TasksResource, RootsResource
+from todo.api import TasksResource, RootsResource, PropertiesResource, AssignsResource, UsersResource, LogsResource
 
 from django.contrib import admin
 admin.autodiscover()
@@ -8,6 +8,10 @@ admin.autodiscover()
 v1_api = Api(api_name='v1')
 v1_api.register(TasksResource())
 v1_api.register(RootsResource())
+v1_api.register(PropertiesResource())
+v1_api.register(AssignsResource())
+v1_api.register(UsersResource())
+v1_api.register(LogsResource())
 
 urlpatterns = patterns('',
 	# Examples:

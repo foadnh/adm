@@ -4,7 +4,8 @@
 var app = angular.module('TodoApp', [
 	'ngRoute',
 	'ngResource',
-	'tyaslab.tastypie'
+	'tyaslab.tastypie',
+	'ui.bootstrap'
 ]);
 
 app.run(function($rootScope) {
