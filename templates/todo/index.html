@@ -5,7 +5,7 @@
 	<div class="navbar-nav navbar-default navbar-fixed-top">
 		{% if user.is_authenticated %}
 		Welcome {{ user.first_name }}
-		<a href="#/user/{{ user.username }}">Tasks</a>
+		<a href="#/user/{{ user.id }}">Tasks</a>
 		<a href="/logout/">Logout</a>
 		{% else %}
 		<form class="navbar-form" action="/" method="post" accept-charset="utf-8">
@@ -31,8 +31,6 @@
 <script src="{{ STATIC_URL }}scripts/app.js"></script>
 <script src="{{ STATIC_URL }}scripts/controllers/tasks.js"></script>
 <script src="{{ STATIC_URL }}scripts/controllers/task.js"></script>
-<script src="{{ STATIC_URL }}scripts/controllers/user-root.js"></script>
-<script src="{{ STATIC_URL }}scripts/controllers/user-sub.js"></script>
 <script src="{{ STATIC_URL }}scripts/controllers/log.js"></script>
 <script src="{{ STATIC_URL }}scripts/services/tastypie.js"></script>
 <script src="{{ STATIC_URL }}scripts/services/http-auth-interceptor.js"></script>

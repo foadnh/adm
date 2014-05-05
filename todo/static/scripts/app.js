@@ -16,19 +16,43 @@ app.config(function ($routeProvider) {
 	$routeProvider
 		.when('/', {
 			templateUrl: '/static/views/tasks.html',
-			controller: 'TasksCtrl'
+			controller: 'TasksCtrl',
+			deleted: false
 		})
 		.when('/task/:taskId', {
 			templateUrl: '/static/views/task.html',
-			controller: 'TaskCtrl'
+			controller: 'TaskCtrl',
+			deleted: false
 		})
-		.when('/user/:user', {
-			templateUrl: '/static/views/user-root.html',
-			controller: 'UserRootCtrl'
+		.when('/user/:userId', {
+			templateUrl: '/static/views/tasks.html',
+			controller: 'TasksCtrl',
+			deleted: false
 		})
-		.when('/user/:user/:taskId', {
-			templateUrl: '/static/views/user-sub.html',
-			controller: 'UserSubCtrl'
+		.when('/user/:userId/:taskId', {
+			templateUrl: '/static/views/task.html',
+			controller: 'TaskCtrl',
+			deleted: false
+		})
+		.when('/deleted/', {
+			templateUrl: '/static/views/tasks.html',
+			controller: 'TasksCtrl',
+			deleted: true
+		})
+		.when('/deleted/task/:taskId', {
+			templateUrl: '/static/views/task.html',
+			controller: 'TaskCtrl',
+			deleted: true
+		})
+		.when('/deleted/user/:userId', {
+			templateUrl: '/static/views/tasks.html',
+			controller: 'TasksCtrl',
+			deleted: true
+		})
+		.when('/deleted/user/:userId/:taskId', {
+			templateUrl: '/static/views/task.html',
+			controller: 'TaskCtrl',
+			deleted: true
 		})
 		.otherwise({
 			redirectTo: '/'

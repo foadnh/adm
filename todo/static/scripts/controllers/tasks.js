@@ -2,7 +2,17 @@
  * Created by foad on 5/1/14.
  */
 
-app.controller('TasksCtrl', function($scope, $rootScope, tastypieService) {
+app.controller('TasksCtrl', function($scope, $rootScope, $route, $routeParams, tastypieService) {
+	if($routeParams.userId == undefined) {
+		$scope.subtaskUrlPrefix = 'task'
+	} else {
+		$scope.subtaskUrlPrefix = 'user/' + $routeParams.userId
+	}
+	var deleted = $route.current.deleted;
+	if (deleted) {
+		$scope.subtaskUrlPrefix = 'deleted/' + $scope.subtaskUrlPrefix;
+	}
+
 	$scope.show = {
 		submit: false
 	};
@@ -26,7 +36,22 @@ app.controller('TasksCtrl', function($scope, $rootScope, tastypieService) {
 			$scope.tasks = [];
 			for(var i = 0; i < ref.data.length; i++) {
 				taskServ.get(ref.data[i].taskId).then(function(ref) {
-					$scope.tasks.push(ref.data);
+					if(ref.data.deleted == deleted) {
+						if($routeParams.userId == undefined) {
+							$scope.tasks.push(ref.data);
+						} else {
+							var assigns = ref.data.assignIds.split(',');
+							var loop = true;
+							for (var assign in assigns) {
+								assignServ.get(assigns[assign]).then(function(assignRef) {
+									if(assignRef.data.userId == $routeParams.userId && loop) {
+										$scope.tasks.push(ref.data);
+										loop = false;
+									}
+								});
+							}
+						}
+					}
 				});
 			}
 		});

@@ -1,7 +1,7 @@
 <div class="navbar-margin-top"></div>
 <nav class="navbar navbar-default" role="navigation">
 	<p class="navbar-text navbar-right">
-		<a href="#/task/{{ task.parent }}" ng-if="task.parent!=null" class="navbar-link">Parent</a>
+		<a href="#/{{ subtaskUrlPrefix }}/{{ task.parent }}" ng-if="task.parent!=null" class="navbar-link">Parent</a>
 	</p>
 	<div class="col-md-offset-1 col-md-10">
 		<div class="navbar-header">
@@ -24,7 +24,7 @@
 
 <div ng-show="show.detail">
 	<h3>
-		<a href="#/tasks/{{ task.id }}">{{ task.title }}</a>
+		<a href="#/{{ subtaskUrlPrefix }}/{{ task.id }}">{{ task.title }}</a>
 	</h3>
 	<div class="row">
 		<div class="col-md-2 single-line">
@@ -39,6 +39,9 @@
 	<button ng-click="show.detail=false" class="btn btn-default btn-sm">
 		<span class="glyphicon glyphicon-edit"></span>
 	</button>
+	<a ng-hide="show.delete" ng-click="show.delete=true" class="btn btn-warning btn-sm">
+		<span class="glyphicon glyphicon-remove"></span>
+	</a>
 </div>
 
 <form name="editForm" ng-hide="show.detail" ng-submit="taskUpdate()" class="form-horizontal">
@@ -70,6 +73,12 @@
 			</button>
 		</div>
 	</div>
+</form>
+
+<form ng-show="show.delete" ng-submit="taskDelete()">
+	<label>Do you really want to delete?</label>
+	<button type="reset" class="btn btn-success" ng-click="show.delete=false">No</button>
+	<button type="submit" class="btn btn-danger">Yes</button>
 </form>
 
 <div>
@@ -105,7 +114,7 @@
 
 	<ul ng-repeat="subtask in subtasks">
 		<li>
-			<a href="#/task/{{ subtask.id }}">{{ subtask.title }}</a> {{ subtask.done | percent }}
+			<a href="#/{{ subtaskUrlPrefix }}/{{ subtask.id }}">{{ subtask.title }}</a> {{ subtask.done | percent }}
 		</li>
 	</ul>
 </div>
@@ -146,7 +155,7 @@
 			<a ng-hide="showAssignDone" class="btn btn-black" ng-click="showAssignDone=true" ng-init="showAssignDone=false">
 				<span class="glyphicon glyphicon-tasks"></span>
 			</a>
-			<button ng-click="assignDelete($index)" class="btn btn-danger btn-xs">
+			<button ng-click="assignDelete(assign.userId)" class="btn btn-danger btn-xs">
 				<span class="glyphicon glyphicon-remove"></span>
 			</button>
 			<form name="assignDone" ng-show="showAssignDone" class="form-inline assign-form" ng-submit="assignDoneUpdate($index)">
@@ -167,25 +176,30 @@
 </div>
 
 <div>
-{#	<script type="text/ng-template" id="logTemplate.html">#}
-	<div class="modal-header">
-		<h3 class="modal-title">Logs</h3>
-	</div>
-	<div class="modal-body">
-		<ul>
-			<li ng-repeat="item in items">
-				<span>
-					<a href="#/user/{{ item.userId }}">{{ users | user:item.userId }}</a>
-					@<small>{{ item.date }}</small>
-				</span>
-				<p class="log-text">{{ item.text }}</p>
-			</li>
-		</ul>
-	</div>
-	<div class="modal-footer">
-		<button class="btn btn-warning" ng-click="close()">Close</button>
-	</div>
-{#	</script>#}
+	<script type="text/ng-template" id="logTemplate.html">
+		<div class="modal-header">
+			<h3 class="modal-title">Logs</h3>
+		</div>
+		<div class="modal-body">
+			<ul>
+				<li ng-repeat="item in items">
+					<span>
+						<a href="#/user/{{ item.userId }}">{{ users | user:item.userId }}</a>
+						@<small>{{ item.date }}</small>
+					</span>
+					<p class="log-text">{{ item.text }}</p>
+				</li>
+			</ul>
+		</div>
+		<div class="modal-footer">
+			<button class="btn btn-default" ng-hide="show.newLog" ng-click="show.newLog=true">New</button>
+			<form name="log-form" ng-show="show.newLog" ng-submit="logAdd(logText)">
+				<textarea placeholder="Enter your log here." ng-model="logText"></textarea>
+				<button class="btn btn-success" ng-show="show.newLog" type="submit">Save</button>
+			</form>
+			<button class="btn btn-warning" ng-click="close()">Close</button>
+		</div>
+	</script>
 	<button class="btn btn-default" ng-click="logOpen()">Log</button>
 </div>
 

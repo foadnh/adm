@@ -2,13 +2,25 @@
  * Created by foad on 5/1/14.
  */
 
-app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, tastypieService) {
+app.controller('TaskCtrl', function($scope, $rootScope, $route, $routeParams, $modal, $location, tastypieService) {
+	if($routeParams.userId == undefined) {
+		$scope.subtaskUrlPrefix = 'task'
+	} else {
+		$scope.subtaskUrlPrefix = 'user/' + $routeParams.userId
+	}
+
+	var deleted = $route.current.deleted;
+	if (deleted) {
+		$scope.subtaskUrlPrefix = 'deleted/' + $scope.subtaskUrlPrefix;
+	}
+
 	$scope.show = {
 		detail: true,
 		submit: false,
 		addProperty: false,
 		addAssign: false,
-		assignAlert: false
+		assignAlert: false,
+		delete: false
 	};
 
 	var taskServ = new tastypieService({
@@ -17,10 +29,6 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 
 	var propertyServ = new tastypieService({
 		apiUrl : '/api/v1/property/'
-	});
-
-	var assignServ = new tastypieService({
-		apiUrl : '/api/v1/assign/'
 	});
 
 	var userServ = new tastypieService({
@@ -39,7 +47,13 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 				$scope.subtasks = [];
 				for(var i= 0; i<subsId.length; i++) {
 					taskServ.get(subsId[i]).then(function(ref) {
-						$scope.subtasks.push(ref.data);
+						if(ref.data.deleted == deleted) {
+							if($routeParams.userId == undefined) {
+								$scope.subtasks.push(ref.data);
+							} else if (ref.data.assigns.indexOf(',' + $routeParams.userId + ':') != -1) {
+								$scope.subtasks.push(ref.data);
+							}
+						}
 					});
 				}
 			}
@@ -55,13 +69,14 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 			}
 
 			$scope.assigns = [];
-			if($scope.task.users != '') {
-				var assigns = $scope.task.users.split(',');
-				for(var i = 0; i < assigns.length; i++) {
-					assignServ.get(assigns[i]).then(function(ref) {
-						$scope.assigns.push(ref.data);
-					});
-				}
+			if($scope.task.assigns != '') {
+				var assignsT = $scope.task.assigns.split(',');
+				angular.forEach(assignsT, function(assignT) {
+					$scope.assigns.push({
+						userId: assignT.split(':')[0],
+						done: assignT.split(':')[1]
+					})
+				});
 			}
 
 			userServ.getList().then(function(ref) {
@@ -78,7 +93,6 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 			'text': 'Task created.' + '\nTitle: ' + $scope.subtask.title + '\nDetail: ' + $scope.subtask.detail,
 			'userId': Number($rootScope.loggedInUser)
 		}).then(function(logRef) {
-		$scope.task.logs = String(logRef.data.id);
 			$scope.subtask.parent = Number($routeParams.taskId);
 			$scope.subtask.logs = String(logRef.data.id);
 			taskServ.save($scope.subtask).then(function(ref) {
@@ -87,23 +101,27 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 				} else {
 					$scope.task.subs += ',' + ref.data.id;
 				}
-				taskServ.save($scope.task);
-				$scope.show.submit = false;
-				$scope.subtask = {
-					title: '',
-					detail: ''
-				};
-				update();
+				taskServ.update($scope.task).then(function(taskRef) {
+					$scope.show.submit = false;
+					$scope.subtask = {
+						title: '',
+						detail: ''
+					};
+					update();
+				});
 			});
 		});
 	};
 
-	var log = function(text) {
+	var log = function(text, node) {
+		if(typeof(node)==='undefined') {
+			var node = $scope.task;
+		}
 		logServ.save({
 			'userId': $rootScope.loggedInUser,
 			'text': text
 		}).then(function(ref) {
-			$scope.task.logs = ',' + String(ref.data.id);
+			$scope.task.logs += ',' + String(ref.data.id);
 			taskServ.update($scope.task)
 		});
 	};
@@ -118,13 +136,31 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 		});
 	};
 
+	taskDelete = function(node) {
+		log('Marked as deleted.', node);
+		node.deleted = true;
+		taskServ.update(node);
+		if(node.subs != null) {
+			angular.forEach(node.subs.split(','), function(sub) {
+				taskServ.get(sub).then(function(ref) {
+					taskDelete(ref.data)
+				});
+			});
+		}
+	};
+
+	$scope.taskDelete = function() {
+		taskDelete($scope.task);
+		$location.path('/');
+	};
+
 	$scope.propertiesUpdate = function() {
 		$scope.task.properties = '';
 		for (property in $scope.properties) {
 			if(property == 0) {
-				$scope.task.properties = $scope.properties[property].name;
+				$scope.task.properties = $scope.properties[property].id;
 			} else {
-				$scope.task.properties += ',' + $scope.properties[property].name;
+				$scope.task.properties += ',' + $scope.properties[property].id;
 			}
 		}
 		taskServ.update($scope.task);
@@ -164,48 +200,115 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 	};
 
 	$scope.assignUpdate = function() {
-		$scope.task.users = '';
-		for (assign in $scope.assigns) {
+		$scope.task.assigns = '';
+		for(assign in $scope.assigns) {
 			if(assign == 0) {
-				$scope.task.users = $scope.assigns[assign].id;
+				$scope.task.assigns = $scope.assigns[assign].userId + ':' + $scope.assigns[assign].done;
 			} else {
-				$scope.task.users += ',' + $scope.assigns[assign].id;
+				$scope.task.assigns += ',' + $scope.assigns[assign].userId + ':' + $scope.assigns[assign].done;
 			}
 		}
 		taskServ.update($scope.task);
 	};
 
-	$scope.assignSubmit = function() {
-		log('User assigned: ' + $scope.assign.user.username);
-		$scope.assign.done = 0;
-		$scope.assign.userId = $scope.assign.user.id;
-		assignServ.save($scope.assign).then(function(ref) {
-			$scope.assigns.push(ref.data);
-			$scope.show.addAssign = false;
-			delete $scope.assign;
-			if($scope.task.users == '') {
-				$scope.task.users = ref.data.id;
-			} else {
-				$scope.task.users += ',' + ref.data.id;
+	$scope.assignSubmit = function(node) {
+		if(typeof(node)==='undefined') {
+			var node = $scope.task;
+		}
+		if($scope.assign.user.id) {
+			if(node.assigns.indexOf($scope.assign.user.id) == -1) {
+				$scope.assign.userId = $scope.assign.user.id;
+				console.log(2);
+				log('User assigned: ' + $scope.assign.user.username, node);
+				if(node === $scope.task) {
+					$scope.assigns.push({
+						userId: $scope.assign.userId,
+						done: 0
+					});
+				}
+				$scope.show.addAssign = false;
+				if(node.assigns == '') {
+					node.assigns = $scope.assign.user.id + ':0';
+				} else {
+					node.assigns += ',' + $scope.assign.user.id + ':0';
+				}
+				taskServ.update(node);
+				if(node.parent != null) {
+					console.log(4);
+					taskServ.get(node.parent).then(function(parentRef) {
+						console.log(5);
+						$scope.assignSubmit(parentRef.data);
+					});
+				} else {
+					delete $scope.assign;
+				}
 			}
-			taskServ.update($scope.task);
-		}, function(err) {
+		} else {
 			$scope.show.assignAlert = true;
+		}
+	};
+
+	$scope.assignDelete = function(userId, node) {
+		if(typeof(node)==='undefined') {
+			console.log('DONG!!!!');
+			var node = $scope.task;
+		}
+		userServ.get(userId).then(function(ref) {
+			log('Assigned user deleted: ' + ref.data.username);
+			var start = node.assigns.indexOf(userId + ':');
+			var end = node.assigns.indexOf(',', start);
+			console.log(start);
+			console.log(end);
+			console.log(node.assigns);
+			console.log(ref.data.username);
+			if(start == 0) {
+				if(end == -1) {
+					console.log('#1');
+					console.log(node);
+					log.assigns = '';
+				} else {
+					console.log('#2');
+					console.log(node);
+					node.assigns = node.assigns.slice(end+1, node.assigns.length);
+				}
+			} else {
+				if(end == -1) {
+					console.log('#3');
+					console.log(node);
+					node.assigns = node.assigns.substring(0, start-1);
+				} else {
+					console.log('#4');
+					console.log(node);
+					node.assigns = node.assigns.substring(0, start) +  node.assigns.slice(end+1, node.assigns.length);
+				}
+			}
+			console.log(node);
+			if(node.subs != null) {
+				var subs = node.subs.split(',');
+				console.log(subs);
+				angular.forEach(subs, function(n) {
+					taskServ.get(n).then(function(ref) {
+						$scope.assignDelete(userId, ref.data);
+					})
+				});
+			}
+			if (node === $scope.task) {
+				for(index in $scope.assigns) {
+					if($scope.assigns[index].userId == userId) {
+						$scope.assigns.splice(index, 1);
+						break;
+					}
+				}
+			}
+			taskServ.update(node);
 		});
 	};
 
-	$scope.assignDelete = function(index) {
-		log('Assigned user deleted: ' + $scope.assigns[index].user.username);
-		assignServ.delete($scope.assigns[index].id);
-		$scope.assigns.splice(index, 1);
-		$scope.assignUpdate();
-	};
-
 	$scope.assignDoneUpdate = function(index) {
-		log(
-			'Assigned user "' + $scope.assigns[index].user.username +
-				'" changed to ' + $scope.assigns[index].done + '% done.');
-		assignServ.update($scope.assigns[index]);
+		userServ.get($scope.assigns[index].userId).then(function(ref) {
+			log('Assigned user "' + ref.data.username + '" changed to ' + $scope.assigns[index].done + '% done.');
+			$scope.assignUpdate();
+		});
 	};
 
 	$scope.logOpen = function() {
@@ -216,13 +319,15 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 				logs.push(ref.data);
 			});
 		});
-		console.log(logs);
 		var modalInstance = $modal.open({
 			templateUrl: 'logTemplate.html',
 			controller: 'LogCtrl',
 			resolve: {
 				items: function () {
 					return logs;
+				},
+				task: function () {
+					return $scope.task;
 				}
 			}
 		});
@@ -241,5 +346,14 @@ app.controller('TaskCtrl', function($scope, $rootScope, $routeParams, $modal, ta
 		console.log($scope.properties);
 		console.log('users:');
 		console.log($scope.users);
+		console.log('logs:');
+		var logs = [];
+		var logIds = $scope.task.logs.split(',');
+		angular.forEach(logIds, function(logId) {
+			logServ.get(logId).then(function(ref) {
+				logs.push(ref.data);
+			});
+		});
+		console.log(logs);
 	};
 });

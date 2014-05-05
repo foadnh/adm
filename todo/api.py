@@ -1,6 +1,6 @@
 __author__ = 'foad'
 from tastypie.resources import ModelResource
-from todo.models import Task, Root, Property, Assign, Log
+from todo.models import Task, Root, Property, Log
 from tastypie.authorization import Authorization
 from django.contrib.auth.models import User
 
@@ -33,17 +33,6 @@ class PropertiesResource(ModelResource):
 	class Meta:
 		queryset = Property.objects.all()
 		resource_name = 'property'
-		allowed_methods = ['post', 'get', 'patch', 'delete', 'put']
-		always_return_data = True
-		authorization= Authorization()
-
-class AssignsResource(ModelResource):
-	"""
-	API Facet
-	"""
-	class Meta:
-		queryset = Assign.objects.all()
-		resource_name = 'assign'
 		allowed_methods = ['post', 'get', 'patch', 'delete', 'put']
 		always_return_data = True
 		authorization= Authorization()
